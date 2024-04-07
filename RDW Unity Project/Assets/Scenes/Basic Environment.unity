@@ -3306,6 +3306,7 @@ GameObject:
   - component: {fileID: 953885991}
   - component: {fileID: 953885990}
   - component: {fileID: 953885989}
+  - component: {fileID: 953885992}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -3339,7 +3340,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 1
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_BackGroundColor: {r: 0, g: 0, b: 0, a: 1}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -3484,7 +3485,7 @@ MonoBehaviour:
   m_TrackingStateInput:
     m_UseReference: 0
     m_Action:
-      m_Name: 
+      m_Name: Tracking State Input
       m_Type: 0
       m_ExpectedControlType: 
       m_Id: ea54e84c-27a1-461b-a23b-9dcb0e2c6049
@@ -3535,6 +3536,22 @@ AudioListener:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 953885986}
   m_Enabled: 1
+--- !u!114 &953885992
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 953885986}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8198813c0b318d54a9c34ca9224a4150, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  markPositionActionReference: {fileID: 187161793506945269, guid: c348712bda248c246b8c49b3db54643f,
+    type: 3}
+  planeMaterial: {fileID: -1251457731659751925, guid: 5daa2e3c4c8d7b948841d963f321a6bf,
+    type: 3}
 --- !u!1 &1076953454
 GameObject:
   m_ObjectHideFlags: 0
