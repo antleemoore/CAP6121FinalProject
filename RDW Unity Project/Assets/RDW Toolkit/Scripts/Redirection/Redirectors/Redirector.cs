@@ -23,7 +23,7 @@ public abstract class Redirector : MonoBehaviour
         if (rotationInDegrees != 0)
         {
             this.transform.RotateAround(Utilities.FlattenedPos3D(redirectionManager.headTransform.position), Vector3.up, rotationInDegrees);
-            this.GetComponentInChildren<KeyboardController>().SetLastRotation(rotationInDegrees);
+            //this.GetComponentInChildren<KeyboardController>().SetLastRotation(rotationInDegrees);
             redirectionManager.statisticsLogger.Event_Rotation_Gain(rotationInDegrees / redirectionManager.deltaDir, rotationInDegrees);
         }
     }
@@ -38,7 +38,7 @@ public abstract class Redirector : MonoBehaviour
         if (rotationInDegrees != 0)
         {
             this.transform.RotateAround(Utilities.FlattenedPos3D(redirectionManager.headTransform.position), Vector3.up, rotationInDegrees);
-            this.GetComponentInChildren<KeyboardController>().SetLastCurvature(rotationInDegrees);
+            //this.GetComponentInChildren<KeyboardController>().SetLastCurvature(rotationInDegrees);
             redirectionManager.statisticsLogger.Event_Curvature_Gain(rotationInDegrees / redirectionManager.deltaPos.magnitude, rotationInDegrees);
         }
     }
@@ -52,7 +52,7 @@ public abstract class Redirector : MonoBehaviour
         if (translation.magnitude > 0)
         {
             this.transform.Translate(translation, Space.World);
-            this.GetComponentInChildren<KeyboardController>().SetLastTranslation(translation);
+            //this.GetComponentInChildren<KeyboardController>().SetLastTranslation(translation);
             redirectionManager.statisticsLogger.Event_Translation_Gain(Mathf.Sign(Vector3.Dot(translation, redirectionManager.deltaPos)) * translation.magnitude / redirectionManager.deltaPos.magnitude, Utilities.FlattenedPos2D(translation));
             if (double.IsNaN(Mathf.Sign(Vector3.Dot(translation, redirectionManager.deltaPos)) * translation.magnitude / redirectionManager.deltaPos.magnitude))
                 print("wtf");
