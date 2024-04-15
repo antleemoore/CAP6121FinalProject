@@ -2,15 +2,16 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.XR.Interaction.Toolkit;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 
 public class PositionTracker : MonoBehaviour
 {
     public InputActionReference markPositionActionReference; // Assign in Inspector
     private List<Vector3> markedPositions = new List<Vector3>(); // Stores the marked positions
-
     public Material lineMaterial; // Assign a material for the line in the Inspector
     private LineRenderer lineRenderer;
-
+    public RedirectionManager redirectionManager;
+    public Transform trackingSpace;
     private void Awake()
     {
         lineRenderer = gameObject.AddComponent<LineRenderer>();
@@ -42,7 +43,9 @@ public class PositionTracker : MonoBehaviour
             {
                 DrawLines();
                 CalculateAndLogArea();
+                UpdateVisualAndCollider();
                 markedPositions.Clear(); // Reset the list for next time
+                redirectionManager.enabled = true;
             }
         }
     }
@@ -95,5 +98,35 @@ public class PositionTracker : MonoBehaviour
         float area = Mathf.Sqrt(s * (s - sideA) * (s - sideB) * (s - sideC));
         return area;
     }
+    void UpdateVisualAndCollider()
+    {
+        if (markedPositions.Count < 4)
+        {
+            Debug.LogError("Insufficient vertices to form a quad");
+            return;
+        }
 
+        // Calculate the bounds
+        Bounds bounds = new Bounds(markedPositions[0], Vector3.zero);
+        for (int i = 1; i < markedPositions.Count; i++)
+        {
+            bounds.Encapsulate(markedPositions[i]);
+        }
+
+        // Adjust the parent GameObject
+        if (trackingSpace != null)
+        {
+            //trackingSpace.position = bounds.center;
+            redirectionManager.UpdateTrackedSpaceDimensions(bounds.size.x, bounds.size.z);
+            //trackingSpace.localScale = new Vector3(bounds.size.x, trackingSpace.localScale.y, bounds.size.z);
+
+            // Reset rotation if you do not need to handle rotated bounds
+            //trackingSpace.rotation = Quaternion.identity;
+        }
+        else
+        {
+            Debug.LogError("Parent transform is not assigned.");
+        }
+    }
 }
+
