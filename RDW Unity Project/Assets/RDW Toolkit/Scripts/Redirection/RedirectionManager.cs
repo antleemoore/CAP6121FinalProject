@@ -30,6 +30,10 @@ public class RedirectionManager : MonoBehaviour {
     [Tooltip("Radius applied by curvature gain")]
     [Range(1, 23)]
     public float CURVATURE_RADIUS = 7.5F;
+    
+    [Tooltip("Buffer width for triggering reset")]
+    [SerializeField, Range(0f, 1f)]
+    public float RESET_TRIGGER_BUFFER = 0.5f;
 
     [Tooltip("The game object that is being physically tracked (probably user's head)")]
     public Transform headTransform;
@@ -81,6 +85,12 @@ public class RedirectionManager : MonoBehaviour {
     public float deltaDir;
     [HideInInspector]
     public Transform targetWaypoint;
+    [HideInInspector]
+    public bool isRotating; // if the avatar is rotating
+    [HideInInspector]
+    public bool isWalking; // if the avatar is walking
+    private const float MOVEMENT_THRESHOLD = 0.2f; // meters per second 
+    private const float ROTATION_THRESHOLD = 15f; // degrees per second
 
 
     [HideInInspector]
@@ -90,6 +100,8 @@ public class RedirectionManager : MonoBehaviour {
     public string startTimeOfProgram;
 
     private float simulatedTime = 0;
+
+    private System.Collections.Generic.List<Vector2> trackedSpaceSegments;
 
     void Awake()
     {
@@ -181,6 +193,7 @@ public class RedirectionManager : MonoBehaviour {
         {
             if (redirector != null)
             {
+                if (redirector is APF_Redirector apf_r) apf_r.ClearGains();
                 redirector.ApplyRedirection();
             }
         }
@@ -393,6 +406,22 @@ public class RedirectionManager : MonoBehaviour {
     {
         deltaPos = currPos - prevPos;
         deltaDir = Utilities.GetSignedAngle(prevDir, currDir);
+        if (deltaPos.magnitude / GetDeltaTime() > MOVEMENT_THRESHOLD) //User is moving
+        {
+            isWalking = true;
+        }
+        else
+        {
+            isWalking = false;
+        }
+        if (Mathf.Abs(deltaDir) / GetDeltaTime() >= ROTATION_THRESHOLD)  //if User is rotating
+        {
+            isRotating = true;
+        }
+        else
+        {
+            isRotating = false;
+        }
     }
 
     public void OnResetTrigger()
@@ -460,5 +489,28 @@ public class RedirectionManager : MonoBehaviour {
         resetTrigger.Initialize();
         if (this.resetter != null)
             this.resetter.Initialize();
+        trackedSpaceSegments = new System.Collections.Generic.List<Vector2> {
+            new Vector2(x/2,z/2),
+            new Vector2(-x/2,z/2),
+            new Vector2(-x/2,-z/2),
+            new Vector2(x/2,-z/2)
+        };
+    }
+
+    public System.Collections.Generic.List<Vector2> GetTrackedSpaceSegments()
+    {
+        if (trackedSpaceSegments == null)
+        {
+            float x = trackedSpace.localScale.x;
+            float z = trackedSpace.localScale.z;
+            
+            trackedSpaceSegments = new System.Collections.Generic.List<Vector2> {
+                new Vector2(x/2,z/2),
+                new Vector2(-x/2,z/2),
+                new Vector2(-x/2,-z/2),
+                new Vector2(x/2,-z/2)
+            };
+        }
+        return trackedSpaceSegments;
     }
 }

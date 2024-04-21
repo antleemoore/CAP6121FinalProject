@@ -1,11 +1,21 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using Redirection;
 
 public abstract class Resetter : MonoBehaviour {
 
     [HideInInspector]
     public RedirectionManager redirectionManager;
+    private static float toleranceAngleError = 1;//Allowable angular error to prevent jamming
+    [HideInInspector]
+    public Vector2 targetPos; // the target position we want user to be at when the reset ends
+    [HideInInspector]
+    public Vector2 targetDir; // the target direction we want user to face when the reset ends
+    private Transform prefabHUD = null;
+    
+    Transform instanceHUD;
 
     enum Boundary { Top, Bottom, Right, Left };
 
@@ -25,7 +35,13 @@ public abstract class Resetter : MonoBehaviour {
 
     public abstract void SimulatedWalkerUpdate();
 
+    private void Awake()
+    {
+        redirectionManager = GetComponent<RedirectionManager>();
 
+        targetDir = new Vector2(1, 0);
+        targetPos = Vector2.zero;
+    }
 
     public void InjectRotation(float rotationInDegrees)
     {
@@ -123,6 +139,94 @@ public abstract class Resetter : MonoBehaviour {
         //print("MaxX: " + maxX);
         //print("MaxZ: " + maxZ);
         return Mathf.Min(tMaxX, tMaxZ);
+    }
+
+    public bool IfCollisionHappens()
+    {
+        var realPos = new Vector2(redirectionManager.currPosReal.x, redirectionManager.currPosReal.z);
+        var realDir = new Vector2(redirectionManager.currDirReal.x, redirectionManager.currDirReal.z).normalized;
+
+        bool ifCollisionHappens = false;
+        List<Vector2> trackingSpace = redirectionManager.GetTrackedSpaceSegments();
+        
+        for (int i = 0; i < trackingSpace.Count; i++)
+        {
+            var p = trackingSpace[i];
+            var q = trackingSpace[(i + 1) % trackingSpace.Count];
+
+            //judge vertices of polygons
+            if (IfCollideWithPoint(realPos, realDir, p))
+            {
+                ifCollisionHappens = true;
+                break;
+            }
+
+            //judge edge collision
+            if (Vector3.Cross(q - p, realPos - p).magnitude / (q - p).magnitude <=
+                redirectionManager.RESET_TRIGGER_BUFFER //distance
+                && Vector2.Dot(q - p, realPos - p) >= 0 && Vector2.Dot(p - q, realPos - q) >= 0 //range
+               )
+            {
+                //if collide with border
+                if (Mathf.Abs(Cross(q - p, realDir)) > 1e-3 &&
+                    Mathf.Sign(Cross(q - p, realDir)) != Mathf.Sign(Cross(q - p, realPos - p)))
+                {
+                    ifCollisionHappens = true;
+                    break;
+                }
+            }
+        }
+        
+        return ifCollisionHappens;
+    }
+    
+    public bool IfCollideWithPoint(Vector2 realPos, Vector2 realDir, Vector2 obstaclePoint)
+    {
+        //judge point, if the avatar will walks into a circle obstacle
+        var pointAngle = Vector2.Angle(obstaclePoint - realPos, realDir);
+        return (obstaclePoint - realPos).magnitude <= redirectionManager.RESET_TRIGGER_BUFFER && pointAngle < 90 - toleranceAngleError;
+    }
+    
+    private float Cross(Vector2 a, Vector2 b)
+    {
+        return a.x * b.y - a.y * b.x;
+    }
+
+    // decide the actual reset position, which doesn't need to be the same with user's current position
+    // a safer position could reduce possible resets in a live-user experiment
+    public Vector2 DecideResetPosition(Vector2 currPosReal)
+    {
+        return currPosReal;
+    }
+    
+    // initialize spin in place hint, rotateDir==1:rotate clockwise, otherwise, rotate counter clockwise
+    public void SetHUD(int rotateDir)
+    {
+        if (prefabHUD == null)
+            prefabHUD = Resources.Load<Transform>("Resetter HUD");
+
+
+        instanceHUD = Instantiate(prefabHUD);
+        instanceHUD.parent = redirectionManager.headTransform;
+        instanceHUD.localPosition = instanceHUD.position;
+        instanceHUD.localRotation = instanceHUD.rotation;
+
+        //rotate clockwise
+        if (rotateDir == 1)
+        {
+            instanceHUD.GetComponent<TextMesh>().text = "Spin in Place\n→";
+        }
+        else
+        {
+            instanceHUD.GetComponent<TextMesh>().text = "Spin in Place\n←";
+        }
+    }
+
+    // destroy HUD object
+    public void DestroyHUD()
+    {
+        if (instanceHUD != null)
+            Destroy(instanceHUD.gameObject);
     }
 
 }

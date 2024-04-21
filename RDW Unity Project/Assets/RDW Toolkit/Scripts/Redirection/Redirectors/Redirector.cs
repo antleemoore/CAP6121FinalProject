@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 using Redirection;
 
 public abstract class Redirector : MonoBehaviour
@@ -58,7 +57,6 @@ public abstract class Redirector : MonoBehaviour
                 print("wtf");
         }
     }
-
-
+    
     
 }
