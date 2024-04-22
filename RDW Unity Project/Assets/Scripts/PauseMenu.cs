@@ -1,11 +1,20 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class PauseMenu : MonoBehaviour
 {
+    private void Awake()
+    {
+        RedirectionManager m = FindObjectOfType<RedirectionManager>();
+        Dropdown RDWSelection = GameObject.FindGameObjectWithTag("RDWDropdown").GetComponent<Dropdown>();
+        RDWSelection.onValueChanged.AddListener(m.SelectRDW);
+    }
+
     public static void RestartGame()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
@@ -24,4 +33,15 @@ public class PauseMenu : MonoBehaviour
         UnityEditor.EditorApplication.isPlaying = false;
         #endif
     }
+
+    public void HideMenu()
+    {
+        gameObject.SetActive(false);
+    }
+
+    public void ShowMenu()
+    {
+        gameObject.SetActive(true);
+    }
+    
 }

@@ -4,7 +4,7 @@ using Redirection;
 public class RedirectionManager : MonoBehaviour {
 
     public enum MovementController { Keyboard, AutoPilot, Tracker };
-
+    
     [Tooltip("Select if you wish to run simulation from commandline in Unity batchmode.")]
     public bool runInTestMode = false;
 
@@ -460,5 +460,27 @@ public class RedirectionManager : MonoBehaviour {
         resetTrigger.Initialize();
         if (this.resetter != null)
             this.resetter.Initialize();
+    }
+
+    public void StartGame()
+    {
+        this.enabled = true;
+    }
+    public void SelectRDW(System.Int32 selection)
+    {
+        switch (selection)
+        {
+            case 0:
+                UpdateRedirector(typeof(S2CRedirector));
+                UpdateResetter(typeof(TwoOneTurnResetter));
+                break;
+            case 1:
+                UpdateRedirector(typeof(S2ORedirector));
+                UpdateResetter(typeof(TwoOneTurnResetter));
+                break;
+            case 2:
+                //TODO: Update to select APF-RDW and R2GResetter
+                break;
+        }
     }
 }
