@@ -60,7 +60,7 @@ public class PositionTracker : MonoBehaviour
         }
 
         lineRenderer.SetPosition(4, markedPositions[0]); // Close the loop
-        transform.SetParent(redirectionManager.trackedSpace.transform);
+        //transform.SetParent(redirectionManager.trackedSpace.transform);
     }
 
     private void CalculateAndLogArea()
