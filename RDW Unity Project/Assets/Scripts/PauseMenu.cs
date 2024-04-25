@@ -36,7 +36,7 @@ public class PauseMenu : MonoBehaviour
 
     public void HideMenu()
     {
-        gameObject.SetActive(false);
+        //gameObject.SetActive(false);
     }
 
     public void ShowMenu()
