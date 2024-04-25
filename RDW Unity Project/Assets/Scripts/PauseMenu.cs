@@ -11,8 +11,17 @@ public class PauseMenu : MonoBehaviour
     private void Awake()
     {
         RedirectionManager m = FindObjectOfType<RedirectionManager>();
-        Dropdown RDWSelection = GameObject.FindGameObjectWithTag("RDWDropdown").GetComponent<Dropdown>();
-        RDWSelection.onValueChanged.AddListener(m.SelectRDW);
+        Dropdown rdwSelection = null;//GameObject.FindGameObjectWithTag("RDWDropdown").GetComponent<Dropdown>();
+        Dropdown[] dropdowns = gameObject.GetComponentsInChildren<Dropdown>();
+        foreach (Dropdown d in dropdowns)
+        {
+            if (d.gameObject.CompareTag("RDWDropdown"))
+            {
+                rdwSelection = d;
+                break; // in future could make env a dropdown and check here too
+            }
+        }
+        if (rdwSelection is not null) rdwSelection.onValueChanged.AddListener(m.SelectRDW);
     }
 
     public static void RestartGame()
