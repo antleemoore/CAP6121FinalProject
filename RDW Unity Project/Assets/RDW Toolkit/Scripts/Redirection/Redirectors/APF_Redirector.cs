@@ -6,6 +6,7 @@ public abstract class APF_Redirector : Redirector
     public GameObject totalForcePointer;//visualization of totalForce
     Vector3 translation;
     float rotationInDegrees;
+    public static readonly float ROTATION_GAIN_CAP_DEGREES_PER_SECOND = 30f;
 
     public void UpdateTotalForcePointer(Vector2 forceT)
     {
@@ -51,10 +52,23 @@ public abstract class APF_Redirector : Redirector
     {
         if (redirectionManager.isRotating)
         {
-            gr = Mathf.Max(gr, redirectionManager.MIN_ROT_GAIN);
-            gr = Mathf.Min(gr, redirectionManager.MAX_ROT_GAIN);
+            //gr = Mathf.Max(gr, redirectionManager.MIN_ROT_GAIN);
+            //gr = Mathf.Min(gr, redirectionManager.MAX_ROT_GAIN);
+            var steeringDir = 1f;
+            //cap to 30 degrees per second --- does not work???
+            if (gr < 0f)
+            {
+                steeringDir = -1f;
+            }
+            gr = Mathf.Clamp(Mathf.Abs(gr), 0, 30); //gr = magnitude
             //redirectionManager.gr = gr;
-            var rotationInDegreesGR = redirectionManager.deltaDir * (gr - 1);
+            var rotationInDegreesGR = redirectionManager.deltaDir * (gr);
+            
+            rotationInDegreesGR = Mathf.Min(Mathf.Abs(rotationInDegreesGR),
+                ROTATION_GAIN_CAP_DEGREES_PER_SECOND);
+            //base rate max
+            rotationInDegreesGR = Mathf.Max(Mathf.Abs(rotationInDegreesGR), 1.5f);
+            rotationInDegreesGR *= steeringDir * redirectionManager.GetDeltaTime();
             if (Mathf.Abs(rotationInDegreesGR) > Mathf.Abs(rotationInDegrees))
             {
                 rotationInDegrees = rotationInDegreesGR;

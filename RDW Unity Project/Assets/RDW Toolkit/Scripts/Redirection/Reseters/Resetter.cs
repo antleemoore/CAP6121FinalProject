@@ -13,9 +13,9 @@ public abstract class Resetter : MonoBehaviour {
     public Vector2 targetPos; // the target position we want user to be at when the reset ends
     [HideInInspector]
     public Vector2 targetDir; // the target direction we want user to face when the reset ends
-    private Transform prefabHUD = null;
+    protected Transform prefabHUD = null;
     
-    Transform instanceHUD;
+    protected Transform instanceHUD;
 
     enum Boundary { Top, Bottom, Right, Left };
 

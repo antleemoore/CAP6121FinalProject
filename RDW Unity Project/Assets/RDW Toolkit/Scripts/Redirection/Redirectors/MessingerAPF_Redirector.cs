@@ -10,6 +10,8 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using Redirection;
+using Unity.VisualScripting;
+using UnityEngine.InputSystem.Controls;
 
 public class MessingerAPF_Redirector : APF_Redirector
 {
@@ -19,6 +21,8 @@ public class MessingerAPF_Redirector : APF_Redirector
     private static readonly float C = 0.00897f;
     private static readonly float lamda = 2.656f;
     private static readonly float gamma = 3.091f;
+    private static readonly float angScaleDilate = 1.3f;
+    private static readonly float angScaleCompress = 0.85f;
 
     private const float M = 15;//unit:degree, the maximum Steering rate in proximity-Based Steering Rate Scaling strategy
 
@@ -32,7 +36,7 @@ public class MessingerAPF_Redirector : APF_Redirector
 
         //calculate total force by the paper
         var forceT = GetTotalForce(physicalSpace);
-        forceT = forceT.normalized;
+        //forceT = forceT.normalized;
 
         UpdateTotalForcePointer(forceT);
 
@@ -93,40 +97,69 @@ public class MessingerAPF_Redirector : APF_Redirector
     //do redirection by MessingerAPF
     public void InjectRedirectionByForce(Vector2 force, List<Vector2> spaceSegments)
     {
-        var desiredFacingDirection = Utilities.UnFlatten(force);//total force vector in physical space
+        var desiredFacingDirection = Utilities.UnFlatten(force).normalized;//total force vector in physical space
         int desiredSteeringDirection = (-1) * (int)Mathf.Sign(Utilities.GetSignedAngle(redirectionManager.currDirReal, desiredFacingDirection));
 
         //calculate walking speed
         var v = redirectionManager.deltaPos.magnitude / redirectionManager.GetDeltaTime();
         float movingRate = 0;
 
-        movingRate = 360 * v / (2 * Mathf.PI * redirectionManager.CURVATURE_RADIUS);
-        //only consider static obstacles
-        var distToObstacle = Utilities.GetNearestDistAndPosToObstacleAndTrackingSpace(spaceSegments, Utilities.FlattenedPos2D(redirectionManager.currPosReal)).Item1;
+        float s = 1; //2.5f * force.magnitude / averageForceVector.magnitude;
 
-        //distance smaller than curvature radius，use Proximity-Based Steering Rate Scaling strategy
-        if (distToObstacle < redirectionManager.CURVATURE_RADIUS)
+        if (v > 0.1f)
         {
-            var h = movingRate;
-            var m = distToObstacle;
-            var t = 1 - m / redirectionManager.CURVATURE_RADIUS;
-            var appliedSteeringRate = (1 - t) * h + t * M;
-            movingRate = appliedSteeringRate;//calculate steering rate of curvature gain
-        }
-        SetCurvature(desiredSteeringDirection * movingRate * redirectionManager.GetDeltaTime() / Mathf.Rad2Deg / Mathf.Max(0.001f, redirectionManager.deltaPos.magnitude)); // WARNING: this could result in a curvature above imperceptible levels
+            movingRate = 360 * v / (2 * Mathf.PI * redirectionManager.CURVATURE_RADIUS);
+            //only consider static obstacles
+            var distToObstacle = Utilities.GetNearestDistAndPosToObstacleAndTrackingSpace(spaceSegments,
+                Utilities.FlattenedPos2D(redirectionManager.currPosReal)).Item1;
 
-        if (redirectionManager.deltaDir * desiredSteeringDirection < 0)
+            //distance smaller than curvature radius，use Proximity-Based Steering Rate Scaling strategy
+            if (distToObstacle < redirectionManager.CURVATURE_RADIUS)
+            {
+                var h = movingRate;
+                var m = distToObstacle;
+                var t = 1 - m / redirectionManager.CURVATURE_RADIUS;
+                var appliedSteeringRate = (1 - t) * h + t * M;
+                movingRate = appliedSteeringRate; //calculate steering rate of curvature gain
+            }
+
+            movingRate = Mathf.Clamp(s * Mathf.Abs(movingRate), 0, 15);
+        }
+
+        //SetCurvature(desiredSteeringDirection * movingRate * redirectionManager.GetDeltaTime() / Mathf.Rad2Deg / Mathf.Max(0.001f, redirectionManager.deltaPos.magnitude)); // WARNING: this could result in a curvature above imperceptible levels
+
+        /*if (redirectionManager.deltaDir * desiredSteeringDirection < 0)
         {//rotate away total force vector
-            //SetRotationGain(redirectionManager.MIN_ROT_GAIN);
-            //SetRotationGain(desiredSteeringDirection * Mathf.Max(1.5f, Mathf.Min(Mathf.Abs(redirectionManager.deltaDir * redirectionManager.MIN_ROT_GAIN), redirectionManager.MAX_ROT_GAIN)) * redirectionManager.GetDeltaTime());
+            SetRotationGain(redirectionManager.MIN_ROT_GAIN);
         }
         else
         {//rotate towards total force vector
-            //SetCurvature(redirectionManager.MAX_ROT_GAIN);
-            //SetRotationGain(desiredSteeringDirection * Mathf.Max(1.5f, Mathf.Min(Mathf.Abs(redirectionManager.deltaDir * redirectionManager.MAX_ROT_GAIN), redirectionManager.MAX_ROT_GAIN)) * redirectionManager.GetDeltaTime());
+            SetRotationGain(redirectionManager.MAX_ROT_GAIN);
+        }*/
+        float headRate = 0f;
+        if (v < 0.1f)
+        {
+            var yawRate = redirectionManager.deltaDir / redirectionManager.GetDeltaTime();
+            headRate = yawRate * ((redirectionManager.deltaDir * desiredSteeringDirection < 0)
+                ? angScaleCompress
+                : angScaleDilate);
+            headRate = Mathf.Clamp(s * Mathf.Abs(headRate), 0, 30);
         }
+
+        //SetRotationGain(headRate);
         //SetTranslationGain(1);
-        
-        ApplyGains();
+
+
+        var appliedRotation = desiredSteeringDirection * Mathf.Max(1.5f, Mathf.Max(movingRate, headRate)) * redirectionManager.GetDeltaTime();
+
+        if (redirectionManager.isWalking)
+        {
+            InjectCurvature(appliedRotation);
+        }
+        else
+        {
+            InjectRotation(appliedRotation);
+        }
+        //ApplyGains();
     }
 }
