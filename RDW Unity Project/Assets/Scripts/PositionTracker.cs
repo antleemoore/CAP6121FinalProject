@@ -45,7 +45,7 @@ public class PositionTracker : MonoBehaviour
                 CalculateAndLogArea();
                 UpdateVisualAndCollider();
                 markedPositions.Clear(); // Reset the list for next time
-                redirectionManager.enabled = true;
+                //redirectionManager.enabled = true;
             }
         }
     }
@@ -60,6 +60,7 @@ public class PositionTracker : MonoBehaviour
         }
 
         lineRenderer.SetPosition(4, markedPositions[0]); // Close the loop
+        //transform.SetParent(redirectionManager.trackedSpace.transform);
     }
 
     private void CalculateAndLogArea()
@@ -114,10 +115,11 @@ public class PositionTracker : MonoBehaviour
         }
 
         // Adjust the parent GameObject
-        if (trackingSpace != null)
+        if (redirectionManager.trackedSpace != null)
         {
             //trackingSpace.position = bounds.center;
-            redirectionManager.UpdateTrackedSpaceDimensions(bounds.size.x, bounds.size.z);
+            redirectionManager.trackedSpace.position = bounds.center; //recenter tracked space (not doing so causes issues)
+            redirectionManager.UpdateTrackedSpaceDimensions(bounds.size.x * 0.9f, bounds.size.z * 0.9f); //set dimensions to 90% size of created bounds to ensure that users will not colide with obstacles
             //trackingSpace.localScale = new Vector3(bounds.size.x, trackingSpace.localScale.y, bounds.size.z);
 
             // Reset rotation if you do not need to handle rotated bounds

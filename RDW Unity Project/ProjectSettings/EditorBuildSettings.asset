@@ -14,6 +14,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Basic Environment.unity
     guid: 8f169933f55996f4e8dfbf80418b1810
+  - enabled: 1
+    path: Assets/Scenes/Maze Environment.unity
+    guid: da205472034cb5f42911dd5fe713faf3
   m_configObjects:
     Unity.XR.Oculus.Settings: {fileID: 11400000, guid: 2238d457089b9494896515a25debf01c,
       type: 2}
