@@ -13,10 +13,6 @@ public class TwoOneTurnResetter : Resetter {
     //float MAX_ORIENTATION_RETURN_ERROR = 15;
 
     float overallInjectedRotation;
-    
-    private Transform prefabHUD = null;
-    
-    Transform instanceHUD;
 
     public override bool IsResetRequired()
     {

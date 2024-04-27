@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-using System.Collections;
+using System.Collections.Generic;
 
 
 namespace Redirection
@@ -68,6 +68,79 @@ namespace Redirection
         public static bool Approximately(Vector2 v0, Vector2 v1)
         {
             return Mathf.Approximately(v0.x, v1.x) && Mathf.Approximately(v0.y, v1.y);
+        }
+
+        // Get nearest distance between currPosReal and obstacles/boundaries
+        public static System.Tuple<float, Vector2> GetNearestDistAndPosToObstacleAndTrackingSpace(List<Vector2> space,
+            Vector2 currPos)
+        {
+            var nearestPosList = new List<Vector2>();
+            //var space = physicalSpaces[physicalSpaceIndex];
+            for (int i = 0; i < space.Count; i++)
+            {
+                var p = space[i];
+                var q = space[(i + 1) % space.Count];
+                var nearestPos = GetNearestPos(currPos, new List<Vector2> { p, q });
+                nearestPosList.Add(nearestPos);
+            }
+
+            //Get min distance
+            float dis = float.MaxValue;
+            Vector2 pos = Vector2.zero;
+            foreach (var p in nearestPosList)
+            {
+                if ((currPos - p).magnitude < dis)
+                {
+                    dis = (currPos - p).magnitude;
+                    pos = p;
+                }
+            }
+
+            return new System.Tuple<float, Vector2>(dis, pos);
+        }
+
+        //Get Nearest point of the obstacle to the pos, obstacle: vertices of a static obstacle
+        public static Vector2 GetNearestPos(Vector2 pos, List<Vector2> obstacle)
+        {
+            float minDist = float.MaxValue; //record min dist
+            var rePos = Vector2.zero;
+            for (int i = 0; i < obstacle.Count; i++)
+            {
+                var p = obstacle[i];
+                var q = obstacle[(i + 1) % obstacle.Count];
+
+                //foot of a perpendicular is on the segment
+                if (Vector2.Dot(q - p, pos - p) > 0 && Vector2.Dot(p - q, pos - q) > 0)
+                {
+                    var perp = p + (q - p).normalized * Vector2.Dot(q - p, pos - p) /
+                        (q - p).magnitude; //foot of a perpendicular
+
+                    var dist = (pos - perp).magnitude;
+                    if (dist < minDist)
+                    {
+                        minDist = dist;
+                        rePos = perp;
+                    }
+                }
+                else //foot of a perpendicular outside the segment, only caculate the distance between vertices
+                {
+                    var dist = (pos - p).magnitude;
+                    if (dist < minDist)
+                    {
+                        minDist = dist;
+                        rePos = p;
+                    }
+
+                    dist = (pos - q).magnitude;
+                    if (dist < minDist)
+                    {
+                        minDist = dist;
+                        rePos = q;
+                    }
+                }
+            }
+
+            return rePos;
         }
     }
 }
