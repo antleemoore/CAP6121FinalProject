@@ -458,6 +458,10 @@ public class RedirectionManager : MonoBehaviour {
     {
         RemoveRedirector();
         this.redirector = (Redirector) this.gameObject.AddComponent(redirectorType);
+        if (redirector is APF_Redirector apf_rdw)
+        {
+            apf_rdw.UpdatePhysicalSpaceSegments(GetTrackedSpaceSegments());
+        }
         //this.redirector = this.gameObject.GetComponent<Redirector>();
         SetReferenceForRedirector();
     }
@@ -495,6 +499,11 @@ public class RedirectionManager : MonoBehaviour {
             new Vector2(-x/2,-z/2),
             new Vector2(x/2,-z/2)
         };
+        
+        if (this.redirector is APF_Redirector apf_rdw)
+        {
+            apf_rdw.UpdatePhysicalSpaceSegments(trackedSpaceSegments);
+        }
     }
 
     public System.Collections.Generic.List<Vector2> GetTrackedSpaceSegments()

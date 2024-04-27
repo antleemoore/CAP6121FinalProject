@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using Unity.VisualScripting;
+using UnityEngine;
 
 public abstract class APF_Redirector : Redirector
 {
@@ -7,6 +9,8 @@ public abstract class APF_Redirector : Redirector
     Vector3 translation;
     float rotationInDegrees;
     public static readonly float ROTATION_GAIN_CAP_DEGREES_PER_SECOND = 30f;
+
+    protected List<Vector2> physicalSpaceSegments;
 
     public void UpdateTotalForcePointer(Vector2 forceT)
     {
@@ -38,6 +42,11 @@ public abstract class APF_Redirector : Redirector
     {
         transform.Translate(translation, Space.World);
         transform.RotateAround(Redirection.Utilities.FlattenedPos3D(redirectionManager.headTransform.position), Vector3.up, rotationInDegrees);
+    }
+
+    public virtual void UpdatePhysicalSpaceSegments(List<Vector2> physSpace)
+    {
+        physicalSpaceSegments = new List<Vector2>(physSpace);
     }
 
     protected void SetTranslationGain(float gt)

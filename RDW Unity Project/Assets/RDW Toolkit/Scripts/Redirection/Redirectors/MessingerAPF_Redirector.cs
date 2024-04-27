@@ -6,6 +6,7 @@
 // Multi-user redirected walking and resetting using artificial potential fields
 // https://www.cs.purdue.edu/cgvlab/courses/490590VR/notes/VRLocomotion/MultiuserRedirectedWalking/APFRedirectedWalking2019.pdf
 
+using System;
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
@@ -24,26 +25,45 @@ public class MessingerAPF_Redirector : APF_Redirector
     private static readonly float angScaleDilate = 1.3f;
     private static readonly float angScaleCompress = 0.85f;
 
+    private float averageTotalForce;
     private const float M = 15;//unit:degree, the maximum Steering rate in proximity-Based Steering Rate Scaling strategy
-
+    
     public override void ApplyRedirection()
     {
-        var physicalSpace = redirectionManager.GetTrackedSpaceSegments();
+        //var physicalSpace = redirectionManager.GetTrackedSpaceSegments();
 
         // var obstaclePolygons = redirectionManager.globalConfiguration.obstaclePolygons;
         // var trackingSpacePoints = redirectionManager.globalConfiguration.trackingSpacePoints;
         // var userTransforms = redirectionManager.GetAvatarTransforms();
 
+        if (physicalSpaceSegments == null || physicalSpaceSegments.Count == 0)
+        {
+            UpdatePhysicalSpaceSegments(redirectionManager.GetTrackedSpaceSegments());
+            // if space still doesnt exist stop
+            if (physicalSpaceSegments == null || physicalSpaceSegments.Count == 0) return;
+        }
+
+        if (averageTotalForce == 0) 
+            averageTotalForce = CalculateAverageForceVector(physicalSpaceSegments);
+        
         //calculate total force by the paper
-        var forceT = GetTotalForce(physicalSpace);
+        var forceT = GetTotalForce(physicalSpaceSegments);
         //forceT = forceT.normalized;
 
         UpdateTotalForcePointer(forceT);
 
         //apply redirection according to the total force
-        InjectRedirectionByForce(forceT, physicalSpace);
+        InjectRedirectionByForce(forceT, physicalSpaceSegments);
 
     }
+
+    public override void UpdatePhysicalSpaceSegments(List<Vector2> physSpace)
+    {
+        base.UpdatePhysicalSpaceSegments(physSpace);
+
+        CalculateAverageForceVector(physicalSpaceSegments);
+    }
+
     //calculate the total force by the paper
     public Vector2 GetTotalForce(List<Vector2> physicalSpace)
     {
@@ -77,6 +97,87 @@ public class MessingerAPF_Redirector : APF_Redirector
         return wForce;
     }
 
+    private float CalculateAverageForceVector(List<Vector2> physSpace)
+    {
+        //generate list of points in phys space to use to approx average force vector
+        List<Vector2> points = new List<Vector2>();
+        
+        // how to create points within bounds represented by physSpace??
+        Bounds b = new Bounds();
+        foreach (Vector2 p in physSpace)
+        {
+            b.Encapsulate(p);
+        }
+
+        for (float i = b.min.x; i < b.max.x; i += (b.max.x - b.min.x) / 10)
+        {
+            for (float j = b.min.y; i < b.max.y; i += (b.max.y - b.min.y) / 10)
+            {
+                points.Add(new Vector2(i,j));
+            }
+        }
+        
+        // need bounds of physSpace
+        float avgForce = 0;
+
+        foreach (Vector2 point in points)
+        {
+            avgForce += GetTotalForce(physSpace, point).magnitude;
+        }
+
+        avgForce /= points.Count;
+        
+        Debug.Log($"Average Force Vector: {avgForce}");
+        return avgForce;
+    }
+    
+    private Vector2 GetTotalForce(List<Vector2> physicalSpace, Vector2 point)
+    {
+        var w = Vector2.zero;
+        //int userIndex = movementManager.physicalSpaceIndex; // we only consider the space where the current user's at
+        //not considering multiple users
+        for (int i = 0; i < physicalSpace.Count; i++)
+            w += GetW_Force(physicalSpace[i], physicalSpace[(i + 1) % physicalSpace.Count], point);
+        //not considering objects
+        //not considering multi-user
+
+        return w;
+    }
+    
+    private Vector2 GetW_Force(Vector2 p, Vector2 q, Vector2 point)
+    {
+        var wForce = Vector2.zero;
+        //split long edge to short segments then accumulate
+        var length = (p - q).magnitude;
+        var segNum = (int)(length / targetSegLength);
+        if (segNum * targetSegLength < length)
+            segNum++;
+        var segLength = length / segNum;
+        var unitVec = (q - p).normalized;
+        for (int i = 1; i <= segNum; i++)
+        {
+            var tmpP = p + unitVec * (i - 1) * segLength;
+            var tmpQ = p + unitVec * i * segLength;
+            wForce += GetW_ForceEverySeg(tmpP, tmpQ, point);
+        }
+        return wForce;
+    }
+    
+    private Vector2 GetW_ForceEverySeg(Vector2 p, Vector2 q, Vector2 point)
+    {
+        //get center point
+        var c = (p + q) / 2;
+        
+        var d = point - c;
+        //normal towards walkable side
+        var n = Utilities.RotateVector(q - p, -90).normalized;
+
+        if (Vector2.Dot(n, d.normalized) > 0)
+            return C * (q - p).magnitude * d.normalized * 1 / Mathf.Pow(d.magnitude, lamda);
+        else
+            return Vector2.zero;
+    }
+
     //get force contributed by a segment
     public Vector2 GetW_ForceEverySeg(Vector2 p, Vector2 q)
     {
@@ -104,7 +205,8 @@ public class MessingerAPF_Redirector : APF_Redirector
         var v = redirectionManager.deltaPos.magnitude / redirectionManager.GetDeltaTime();
         float movingRate = 0;
 
-        float s = 1; //2.5f * force.magnitude / averageForceVector.magnitude;
+        if (averageTotalForce == 0) Debug.Log("Not finished calculating average");
+        float s = 2.5f * force.magnitude / averageTotalForce;
 
         if (v > 0.1f)
         {
@@ -140,25 +242,26 @@ public class MessingerAPF_Redirector : APF_Redirector
         if (v < 0.1f)
         {
             var yawRate = redirectionManager.deltaDir / redirectionManager.GetDeltaTime();
-            headRate = yawRate * ((redirectionManager.deltaDir * desiredSteeringDirection < 0)
-                ? angScaleCompress
-                : angScaleDilate);
+            headRate = yawRate * (((redirectionManager.deltaDir * desiredSteeringDirection < 0)
+                ? angScaleDilate
+                : angScaleCompress) - 1);
             headRate = Mathf.Clamp(s * Mathf.Abs(headRate), 0, 30);
         }
 
         //SetRotationGain(headRate);
         //SetTranslationGain(1);
-
-
-        var appliedRotation = desiredSteeringDirection * Mathf.Max(1.5f, Mathf.Max(movingRate, headRate)) * redirectionManager.GetDeltaTime();
+        
+        //magnitude of rotation to apply
+        var appliedRotation = Mathf.Max(1.5f, Mathf.Max(movingRate, headRate)) * redirectionManager.GetDeltaTime();
 
         if (redirectionManager.isWalking)
         {
-            InjectCurvature(appliedRotation);
+            InjectCurvature(desiredSteeringDirection * appliedRotation);
         }
         else
         {
-            InjectRotation(appliedRotation);
+            var rotDir = -Mathf.Sign(desiredSteeringDirection * redirectionManager.deltaDir);
+            InjectRotation(rotDir * appliedRotation);
         }
         //ApplyGains();
     }
