@@ -24,6 +24,7 @@ Library: C:\Users\purpl\Desktop\SPR2024\CAP6121\CAP6121FinalProject\RDW Unity Pr
 --assembly-defines=Unity.RenderPipelines.Core.Runtime;
 --assembly-defines=Unity.RenderPipelines.Universal.Runtime;
 --assembly-defines=Unity.TextMeshPro;
+--assembly-defines=Unity.VisualScripting.Core;
 --assembly-defines=Unity.XR.CoreUtils;
 --assembly-defines=Unity.XR.Interaction.Toolkit;
 --assembly-defines=Unity.XR.Interaction.Toolkit.Samples.StarterAssets;
@@ -129,6 +130,7 @@ Library: C:\Users\purpl\Desktop\SPR2024\CAP6121\CAP6121FinalProject\RDW Unity Pr
 --assembly-defines=Unity.RenderPipelines.Core.Runtime;
 --assembly-defines=Unity.RenderPipelines.Universal.Runtime;
 --assembly-defines=Unity.TextMeshPro;
+--assembly-defines=Unity.VisualScripting.Core;
 --assembly-defines=Unity.XR.CoreUtils;
 --assembly-defines=Unity.XR.Interaction.Toolkit;
 --assembly-defines=Unity.XR.Interaction.Toolkit.Samples.StarterAssets;
