@@ -1,11 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.XR.Interaction.Toolkit;
 using System.Collections.Generic;
-using Unity.Mathematics;
-using Unity.VisualScripting;
-using UnityEditor.Experimental.GraphView;
-
 public class PositionTracker : MonoBehaviour
 {
     public InputActionReference markPositionActionReference; // Assign in Inspector

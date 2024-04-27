@@ -1,7 +1,5 @@
-using System.Collections;
 using System.Collections.Generic;
 using Interfaces;
-using UnityEditorInternal;
 using UnityEngine;
 
 public class EnergyBar : MonoBehaviour, IEnergyBar
