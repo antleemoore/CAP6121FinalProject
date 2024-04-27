@@ -42,7 +42,7 @@ public class NinjaBehavior : MonoBehaviour, IPlayer
             GameOverEvent = new UnityEvent();
         }
 
-        energyBar = gameObject.GetComponent<IEnergyBar>();
+        energyBar = gameObject.GetComponentInChildren<IEnergyBar>();
     }
 
     // Update is called once per frame
@@ -99,6 +99,7 @@ public class NinjaBehavior : MonoBehaviour, IPlayer
     private void OnGameOver()
     {
         GameOverEvent?.Invoke();
+        PauseMenu.RestartGame();
     }
 
     private void DisableMoldPower()

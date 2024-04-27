@@ -2,23 +2,26 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.XR.Interaction.Toolkit;
 using System.Collections.Generic;
+using Unity.Mathematics;
 using Unity.VisualScripting;
+using UnityEditor.Experimental.GraphView;
 
 public class PositionTracker : MonoBehaviour
 {
     public InputActionReference markPositionActionReference; // Assign in Inspector
     private List<Vector3> markedPositions = new List<Vector3>(); // Stores the marked positions
     public Material lineMaterial; // Assign a material for the line in the Inspector
-    private LineRenderer lineRenderer;
+    //private LineRenderer lineRenderer;
     public RedirectionManager redirectionManager;
     public Transform trackingSpace;
     private void Awake()
     {
-        lineRenderer = gameObject.AddComponent<LineRenderer>();
+        /*lineRenderer = gameObject.AddComponent<LineRenderer>();
         lineRenderer.material = lineMaterial;
         lineRenderer.startWidth = 0.05f;
         lineRenderer.endWidth = 0.05f;
-        lineRenderer.positionCount = 0;
+        lineRenderer.positionCount = 0;*/
+        redirectionManager = FindObjectOfType<RedirectionManager>();
     }
 
     private void OnEnable()
@@ -41,25 +44,25 @@ public class PositionTracker : MonoBehaviour
 
             if (markedPositions.Count == 4)
             {
-                DrawLines();
+                //DrawLines();
                 CalculateAndLogArea();
                 UpdateVisualAndCollider();
                 markedPositions.Clear(); // Reset the list for next time
-                //redirectionManager.enabled = true;
+                enabled = false; //disable after setting boundary
             }
         }
     }
 
     private void DrawLines()
     {
-        lineRenderer.positionCount = 5; // 4 points + 1 to close the loop
+        /*lineRenderer.positionCount = 5; // 4 points + 1 to close the loop
 
         for (int i = 0; i < 4; i++)
         {
             lineRenderer.SetPosition(i, markedPositions[i]);
         }
 
-        lineRenderer.SetPosition(4, markedPositions[0]); // Close the loop
+        lineRenderer.SetPosition(4, markedPositions[0]); // Close the loop*/
         //transform.SetParent(redirectionManager.trackedSpace.transform);
     }
 
@@ -118,8 +121,13 @@ public class PositionTracker : MonoBehaviour
         if (redirectionManager.trackedSpace != null)
         {
             //trackingSpace.position = bounds.center;
-            redirectionManager.trackedSpace.position = bounds.center; //recenter tracked space (not doing so causes issues)
-            redirectionManager.UpdateTrackedSpaceDimensions(bounds.size.x * 0.9f, bounds.size.z * 0.9f); //set dimensions to 90% size of created bounds to ensure that users will not colide with obstacles
+            //
+            redirectionManager.UpdateTrackedSpaceDimensions(bounds.size.x * 0.9f, bounds.size.z * 0.9f);
+            // Code Assumes centered at <0,0,0> local with identity quaternion therefore DO NOT CHANGE THIS
+            
+            //redirectionManager.trackedSpace.rotation = quaternion.identity; //do not want identity but not sure how to get the right value
+            //redirectionManager.trackedSpace.position = bounds.center; //recenter tracked space (not doing so causes issues)
+            // this does NOT guarantee that the tracked space matches boundary correctly... need to ensure this though
             //trackingSpace.localScale = new Vector3(bounds.size.x, trackingSpace.localScale.y, bounds.size.z);
 
             // Reset rotation if you do not need to handle rotated bounds

@@ -7,8 +7,8 @@ using UnityEngine;
 public class EnergyBar : MonoBehaviour, IEnergyBar
 {
     public GameObject enegeryCube;
-    public float maxEnergy = 100f;
-    public float drainRate = 1f;
+    public float maxEnergy = 1f;
+    public float drainRate = 0.005f;
     private float currentEnergy;
 
     public float CurrentEnergy { get => currentEnergy; }
@@ -27,7 +27,7 @@ public class EnergyBar : MonoBehaviour, IEnergyBar
 
     // variable for inital x scale of the energy cube
     private float initialXScale;
-
+    
     // reference for the player
     public GameObject player;
 
@@ -77,7 +77,7 @@ public class EnergyBar : MonoBehaviour, IEnergyBar
     void Update()
     {
         if (!EnemyManager.GameActive) return;
-        if (currentEnergy <= 0.03 * maxEnergy && !deathSoundStart)
+        if (currentEnergy <= 3 * drainRate  && !deathSoundStart) //3 seconds to death
         {
             // play the death sound
             GetComponent<AudioSource>().PlayOneShot(deathSound);
@@ -88,7 +88,8 @@ public class EnergyBar : MonoBehaviour, IEnergyBar
         {
             // Debug.Log("You are out of energy!");
             // If the current energy is less than or equal to 0, destroy the player
-            UnityEditor.EditorApplication.isPlaying = false;
+            // UnityEditor.EditorApplication.isPlaying = false;
+            // PauseMenu.RestartGame();
         }
 
         drainTimer += Time.deltaTime;
@@ -96,11 +97,8 @@ public class EnergyBar : MonoBehaviour, IEnergyBar
         {
             currentEnergy -= drainRate;
             drainTimer = 0f;
+            enegeryCube.transform.localScale = new Vector3(initialXScale * currentEnergy, enegeryCube.transform.localScale.y, enegeryCube.transform.localScale.z);
         }
-
-        // Debug.Log("Current energy: " + currentEnergy);
-        // set the x scale of the energy cube to the current energy, without changing the y and z scales
-        enegeryCube.transform.localScale = new Vector3(currentEnergy, enegeryCube.transform.localScale.y, enegeryCube.transform.localScale.z);
     }
     
 }

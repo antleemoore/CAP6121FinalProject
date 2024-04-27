@@ -27,7 +27,7 @@ public abstract class EnemyBase : MonoBehaviour, IEnemy
     protected float KnockbackDistance = 2f;
     protected float AttackInterval = 5f;
     private float attackTimer = 0f;
-    protected float FruitDamage = 0.05f;
+    protected float FruitDamage = 0.025f;
 
     public List<Transform> waypoints = new List<Transform>();
     
