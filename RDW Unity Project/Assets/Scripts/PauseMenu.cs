@@ -1,27 +1,15 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
 
 public class PauseMenu : MonoBehaviour
 {
+    public TMP_Dropdown rdwSelection;
     private void Awake()
     {
         RedirectionManager m = FindObjectOfType<RedirectionManager>();
-        Dropdown rdwSelection = null;//GameObject.FindGameObjectWithTag("RDWDropdown").GetComponent<Dropdown>();
-        Dropdown[] dropdowns = gameObject.GetComponentsInChildren<Dropdown>();
-        foreach (Dropdown d in dropdowns)
-        {
-            if (d.gameObject.CompareTag("RDWDropdown"))
-            {
-                rdwSelection = d;
-                break; // in future could make env a dropdown and check here too
-            }
-        }
         if (rdwSelection is not null) rdwSelection.onValueChanged.AddListener(m.SelectRDW);
+        else Debug.LogWarning("Failed to assign RDW Selection method");
     }
 
     public static void RestartGame()

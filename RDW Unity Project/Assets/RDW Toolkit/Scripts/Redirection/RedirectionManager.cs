@@ -193,7 +193,7 @@ public class RedirectionManager : MonoBehaviour {
         {
             if (redirector != null)
             {
-                if (redirector is APF_Redirector apf_r) apf_r.ClearGains();
+                //if (redirector is APF_Redirector apf_r) apf_r.ClearGains();
                 redirector.ApplyRedirection();
             }
         }
@@ -540,7 +540,8 @@ public class RedirectionManager : MonoBehaviour {
                 UpdateResetter(typeof(TwoOneTurnResetter));
                 break;
             case 2:
-                //TODO: Update to select APF-RDW and R2GResetter
+                UpdateRedirector(typeof(MessingerAPF_Redirector));
+                UpdateResetter(typeof(R2G_Resetter));
                 break;
         }
     }
