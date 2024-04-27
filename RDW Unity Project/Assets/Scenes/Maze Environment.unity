@@ -8712,7 +8712,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   redirectionManager: {fileID: 0}
   bodyCollider: {fileID: 0}
-  RESET_TRIGGER_BUFFER: 0.5
+  RESET_TRIGGER_BUFFER: 0.102
   xLength: 0
   zLength: 0
 --- !u!65 &1819047012
